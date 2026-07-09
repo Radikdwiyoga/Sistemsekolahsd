@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Informasi SD Merdeka",
+  "description": "Sistem informasi sekolah dasar (SD) terintegrasi dengan fitur multi-role (Admin, Guru, Siswa, Wali) untuk manajemen nilai, kehadiran, jadwal, tugas, pengumuman, dan galeri sekolah.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
