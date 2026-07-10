@@ -7,8 +7,8 @@ import {
 import { LocalDB } from '../lib/db';
 import { Announcement, Gallery } from '../types/database';
 
-import logoImg from '../assets/images/sdit_abdul_haris_logo_1783590432054.jpg';
-import buildingImg from '../assets/images/sdit_abdul_haris_building_1783590444165.jpg';
+import logoImg from '../assets/images/sdit_abdul_haris_logo_1783590432054.jpeg';
+import buildingImg from '../assets/images/sdit_abdul_haris_building_1783590444165.jpeg';
 import teachersImg from '../assets/images/sdit_abdul_haris_teachers_1783590457342.jpeg';
 
 interface LandingPageProps {
