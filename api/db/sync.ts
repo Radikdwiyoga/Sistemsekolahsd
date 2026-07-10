@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from './pgClient';
+import pool from './pgClient.js';
 
 type AnyReq = VercelRequest & { body?: any };
 
