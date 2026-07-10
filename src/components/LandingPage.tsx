@@ -139,9 +139,9 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
       </header>
 
       {/* Hero Section */}
-      <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white pt-12 pb-20 sm:pb-28 lg:pt-20 lg:pb-32">
+      <section id="hero" className="relative overflow-hidden bg-linear-to-br from-blue-500 via-blue-600 to-indigo-700 text-white pt-12 pb-20 sm:pb-28 lg:pt-20 lg:pb-32">
         {/* Child-friendly elements */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] bg-size-[16px_16px]"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
@@ -207,10 +207,10 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
               <img 
                 src={buildingImg} 
                 alt="Gedung SDIT ABDUL HARIS" 
-                className="w-full h-[300px] sm:h-[400px] object-cover"
+                className="w-full h-75 sm:h-100 object-cover"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 text-white">
+              <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-6 text-white">
                 <span className="text-yellow-400 font-bold text-xs uppercase tracking-wider block">Gedung Sekolah Utama</span>
                 <span className="font-display font-semibold text-lg">Asri, Aman & Ramah Anak</span>
               </div>
@@ -338,10 +338,10 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                 <img 
                   src={teachersImg} 
                   alt="Dewan Guru SDIT ABDUL HARIS" 
-                  className="w-full h-[350px] sm:h-[450px] object-cover animate-fade-in"
+                  className="w-full h-87.5 sm:h-112.5 object-cover animate-fade-in"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/90 to-transparent p-6 text-white text-center">
+                <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-slate-900/90 to-transparent p-6 text-white text-center">
                   <span className="font-display font-bold text-lg">Kebersamaan Guru & Staf SDIT ABDUL HARIS</span>
                   <p className="text-xs text-slate-300 mt-1">Siap Membimbing Generasi Penerus yang Cerdas & Berkarakter</p>
                 </div>
@@ -390,7 +390,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-48 bg-gradient-to-br from-blue-500 to-indigo-600 p-6 flex flex-col justify-between text-white">
+                  <div className="h-48 bg-linear-to-br from-blue-500 to-indigo-600 p-6 flex flex-col justify-between text-white">
                     <BookOpen className="w-8 h-8 opacity-40" />
                     <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full w-max">
                       INFO SEKOLAH
@@ -398,7 +398,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                   </div>
                 )}
                 
-                <div className="p-6 sm:p-8 flex flex-col flex-grow justify-between">
+                <div className="p-6 sm:p-8 flex flex-col grow justify-between">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
                       <Calendar className="w-3.5 h-3.5" />
@@ -505,7 +505,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
             </div>
             
             {/* Visual clean Map Illustration using beautiful Unsplash design */}
-            <div className="rounded-2xl overflow-hidden h-[300px] sm:h-[350px] relative">
+            <div className="rounded-2xl overflow-hidden h-72 sm:h-80 relative">
               <iframe 
                 src="https://maps.google.com/maps?q=-6.1713208,107.0879449&z=17&output=embed" 
                 className="w-full h-full border-0 opacity-95"
@@ -580,7 +580,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
             className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 z-10"
           >
             {/* Header decoration */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
+            <div className="bg-linear-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
               <div>
                 <h3 className="font-display font-bold text-xl">Masuk Portal Sekolah</h3>
                 <p className="text-blue-100 text-xs mt-1">Gunakan akun terdaftar untuk masuk ke dashboard Anda</p>
@@ -608,7 +608,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   placeholder="name@sekolah.sch.id"
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm transition-shadow"
                 />
@@ -620,7 +620,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   placeholder="Sandi login Anda (e.g. admin, guru, siswa, wali)"
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm transition-shadow"
                 />

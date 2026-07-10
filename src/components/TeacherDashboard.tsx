@@ -46,7 +46,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
 
   // Submissions State for Grading
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [gradeSubTab, setGradeSubTab] = useState<'input_manual' | 'nilai_tugas'>('input_manual');
+  const [gradeSubTab, setGradeSubTab] = useState<'input_manual' | 'nilai_tugas' | 'rekap_nilai'>('input_manual');
   const [gradingAssignmentId, setGradingAssignmentId] = useState<string>('');
 
   // Attendance Sub-Tabs & Recap State
@@ -500,7 +500,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
           </div>
         </div>
 
-        <nav className="flex-grow px-4 space-y-1.5">
+        <nav className="grow px-4 space-y-1.5">
           {[
             { id: 'jadwal', label: 'Jadwal Mengajar', icon: Calendar },
             { id: 'absensi', label: 'Presensi / Absensi', icon: UserCheck },
@@ -539,7 +539,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow overflow-y-auto h-screen p-6 sm:p-8">
+      <main className="grow overflow-y-auto h-screen p-6 sm:p-8">
         
         {/* JADWAL TAB */}
         {activeTab === 'jadwal' && (
@@ -722,7 +722,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                                 <input 
                                   type="text"
                                   value={attendanceNotes[s.id] || ''}
-                                  onChange={(e) => setAttendanceNotes(prev => ({ ...prev, [s.id]: e.target.value }))}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAttendanceNotes(prev => ({ ...prev, [s.id]: e.target.value }))}
                                   placeholder="Surat dokter / keterangan..."
                                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-[11px]"
                                 />
@@ -771,7 +771,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                       <input 
                         type="date" 
                         value={recapDate}
-                        onChange={(e) => setRecapDate(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecapDate(e.target.value)}
                         className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-xs"
                       />
                     </div>
@@ -1096,7 +1096,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pilih Mata Pelajaran</label>
                     <select 
                       value={selectedSubjectId}
-                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedSubjectId(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
                     >
                       {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
@@ -1107,7 +1107,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jenis Evaluasi</label>
                     <select 
                       value={selectedGradeType}
-                      onChange={(e) => setSelectedGradeType(e.target.value as any)}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedGradeType(e.target.value as 'tugas' | 'uh' | 'uts' | 'uas')}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none animate-none"
                     >
                       <option value="tugas">Tugas Harian (Tugas)</option>
@@ -1163,7 +1163,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                                   max={100}
                                   placeholder="E.g. 85"
                                   value={gradesSheet[s.id] || ''}
-                                  onChange={(e) => setGradesSheet(prev => ({ ...prev, [s.id]: e.target.value }))}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGradesSheet(prev => ({ ...prev, [s.id]: e.target.value }))}
                                   className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-center text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
                               </td>
@@ -1172,7 +1172,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                                   type="text"
                                   placeholder="Tulis pujian atau catatan perbaikan..."
                                   value={gradesNotes[s.id] || ''}
-                                  onChange={(e) => setGradesNotes(prev => ({ ...prev, [s.id]: e.target.value }))}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGradesNotes(prev => ({ ...prev, [s.id]: e.target.value }))}
                                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
                               </td>
@@ -1204,7 +1204,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pilih Tugas Harian untuk Dinilai</label>
                     <select
                       value={gradingAssignmentId}
-                      onChange={(e) => setGradingAssignmentId(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setGradingAssignmentId(e.target.value)}
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none font-bold text-slate-700"
                     >
                       <option value="">-- Silakan Pilih Tugas Harian --</option>
@@ -1276,7 +1276,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                                       title="Klik untuk download file siswa"
                                     >
                                       <Download className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                                      <span className="truncate max-w-[120px] font-bold">{subRecord.file_name}</span>
+                                      <span className="truncate max-w-30 font-bold">{subRecord.file_name}</span>
                                     </a>
                                   ) : (
                                     <span className="text-red-500 text-[10px] bg-red-50 px-2 py-0.5 rounded font-black">Belum Mengirim</span>
@@ -1304,7 +1304,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                                       id={`notes-${subRecord.id}`}
                                       defaultValue={subRecord.notes || ''}
                                       placeholder="Pujian / catatan koreksi..."
-                                      className="w-full min-w-[150px] px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                      className="w-full min-w-37.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     />
                                   ) : (
                                     <span className="text-slate-300 font-normal">-</span>
@@ -1357,7 +1357,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pilih Mata Pelajaran Rekap</label>
                     <select
                       value={selectedSubjectId}
-                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedSubjectId(e.target.value)}
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none font-bold text-slate-700"
                     >
                       {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
@@ -1485,7 +1485,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Pilih Ruang Kelas</label>
                     <select 
                       value={selectedClassId}
-                      onChange={(e) => setSelectedClassId(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedClassId(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
                     >
                       {LocalDB.getClasses().map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
@@ -1496,7 +1496,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Pilih Mata Pelajaran</label>
                     <select 
                       value={selectedSubjectId}
-                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedSubjectId(e.target.value)}
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
                     >
                       {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -1509,7 +1509,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                       type="text"
                       required
                       value={newAsgTitle}
-                      onChange={(e) => setNewAsgTitle(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewAsgTitle(e.target.value)}
                       placeholder="E.g. PR Penjumlahan Menggunakan Gambar 📝"
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none font-bold"
                     />
@@ -1518,7 +1518,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Lampirkan File Tugas / PDF Soal (Opsional)</label>
                     <div className="flex items-center gap-2">
-                      <label className="flex-grow flex items-center justify-between px-3 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer transition-all">
+                      <label className="grow flex items-center justify-between px-3 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 cursor-pointer transition-all">
                         <span className="truncate">{newAsgFileName || 'Pilih file PDF, gambar, atau lembar tugas...'}</span>
                         <Upload className="w-4 h-4 text-slate-400 shrink-0 ml-2" />
                         <input 
@@ -1553,7 +1553,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                       type="text"
                       required
                       value={newAsgDeadline}
-                      onChange={(e) => setNewAsgDeadline(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewAsgDeadline(e.target.value)}
                       placeholder="YYYY-MM-DD HH:mm"
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
                     />
@@ -1565,7 +1565,7 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                       required
                       rows={4}
                       value={newAsgDesc}
-                      onChange={(e) => setNewAsgDesc(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewAsgDesc(e.target.value)}
                       placeholder="Tuliskan petunjuk pengerjaan di sini secara ramah untuk anak-anak..."
                       className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                     ></textarea>

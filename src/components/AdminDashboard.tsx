@@ -829,7 +829,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
           </div>
         </div>
 
-        <nav className="flex-grow px-4 space-y-1.5">
+        <nav className="grow px-4 space-y-1.5">
           {[
             { id: 'dashboard', label: 'Dashboard Utama', icon: BookOpen },
             { id: 'siswa', label: 'Data Siswa (Murid)', icon: Users },
@@ -870,7 +870,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow overflow-y-auto h-screen p-6 sm:p-8">
+      <main className="grow overflow-y-auto h-screen p-6 sm:p-8">
         
         {/* Statistics Tab */}
         {activeTab === 'dashboard' && (
@@ -1015,23 +1015,23 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
 
             {/* Filters & Search bar */}
             <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col md:flex-row items-center gap-4">
-              <div className="relative flex-grow w-full">
+<div className="relative grow w-full">
                 <Search className="absolute top-3 left-3 w-4 h-4 text-slate-400" />
                 <input 
                   type="text"
                   placeholder="Cari nama siswa, NIS, atau NISN..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-              </div>
+</div>
 
               <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs w-full">
                   <Filter className="w-3.5 h-3.5 text-slate-400" />
                   <select 
                     value={filterClass}
-                    onChange={(e) => setFilterClass(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterClass(e.target.value)}
                     className="bg-transparent focus:outline-none w-full"
                   >
                     <option value="semua">Semua Kelas</option>
@@ -1044,7 +1044,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                 <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs w-full">
                   <select 
                     value={filterGender}
-                    onChange={(e) => setFilterGender(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterGender(e.target.value)}
                     className="bg-transparent focus:outline-none w-full"
                   >
                     <option value="semua">Semua Gender</option>
@@ -1173,7 +1173,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                   type="text"
                   placeholder="Cari nama guru, NIP, atau spesialisasi..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
@@ -1366,7 +1366,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                       />
                     </div>
                   )}
-                  <div className="p-6 flex-grow space-y-4">
+                  <div className="p-6 grow space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded-lg text-[10px] font-extrabold uppercase tracking-wider">
                         Sasaran: {ann.target_role}
@@ -1451,7 +1451,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Periode Bulan SPP</label>
                     <select 
                       value={paymentMonth} 
-                      onChange={(e) => setPaymentMonth(e.target.value)} 
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPaymentMonth(e.target.value)} 
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
                     >
                       <option value="Juli 2026">Juli 2026</option>
@@ -1475,7 +1475,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                       type="number" 
                       required 
                       value={paymentAmount} 
-                      onChange={(e) => setPaymentAmount(Number(e.target.value))} 
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentAmount(Number(e.target.value))} 
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none" 
                     />
                   </div>
@@ -1619,7 +1619,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
             animate={{ opacity: 1, scale: 1 }}
             className="relative bg-white rounded-3xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-100 z-10"
           >
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
+            <div className="bg-linear-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
               <div>
                 <h3 className="font-display font-bold text-lg">
                   {editingId ? 'Edit' : 'Tambah'} {modalType === 'siswa' ? 'Siswa & Wali' : modalType === 'guru' ? 'Guru Pengajar' : modalType === 'kelas' ? 'Ruang Kelas' : 'Mading Pengumuman'}
@@ -1643,15 +1643,15 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap Siswa</label>
-                        <input type="text" required value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="E.g. Kiki Pratama" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormName(e.target.value)} placeholder="E.g. Kiki Pratama" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Email Login</label>
-                        <input type="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="kiki@sekolah.sch.id" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="email" required value={formEmail} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormEmail(e.target.value)} placeholder="kiki@sekolah.sch.id" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Password Login Siswa</label>
-                        <input type="text" required value={formStudentPassword} onChange={(e) => setFormStudentPassword(e.target.value)} placeholder="siswa" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formStudentPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormStudentPassword(e.target.value)} placeholder="siswa" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
@@ -1673,15 +1673,15 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Nomor Induk Siswa (NIS)</label>
-                        <input type="text" required value={formNis} onChange={(e) => setFormNis(e.target.value)} placeholder="26001" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formNis} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormNis(e.target.value)} placeholder="26001" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">NIS Nasional (NISN)</label>
-                        <input type="text" required value={formNisn} onChange={(e) => setFormNisn(e.target.value)} placeholder="0152938102" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formNisn} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormNisn(e.target.value)} placeholder="0152938102" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Kelas Tujuan</label>
-                        <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none">
+                        <select value={formClassId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormClassId(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none">
                           {classes.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
                         </select>
                       </div>
@@ -1700,15 +1700,15 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Tempat Lahir</label>
-                        <input type="text" value={formBirthPlace} onChange={(e) => setFormBirthPlace(e.target.value)} placeholder="E.g. Jakarta" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" value={formBirthPlace} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormBirthPlace(e.target.value)} placeholder="E.g. Jakarta" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Tanggal Lahir</label>
-                        <input type="date" value={formBirthDate} onChange={(e) => setFormBirthDate(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none" />
+                        <input type="date" value={formBirthDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormBirthDate(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none" />
                       </div>
                       <div className="sm:col-span-2 space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Alamat Lengkap Rumah</label>
-                        <textarea value={formAddress} onChange={(e) => setFormAddress(e.target.value)} placeholder="Jl. Pemuda No. 8..." rows={2} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+                        <textarea value={formAddress} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormAddress(e.target.value)} placeholder="Jl. Pemuda No. 8..." rows={2} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
                       </div>
                     </div>
                   </div>
@@ -1718,27 +1718,27 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Nama Ayah Kandung</label>
-                        <input type="text" required value={formParentFather} onChange={(e) => setFormParentFather(e.target.value)} placeholder="E.g. Joko Pratama" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formParentFather} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormParentFather(e.target.value)} placeholder="E.g. Joko Pratama" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Nama Ibu Kandung</label>
-                        <input type="text" required value={formParentMother} onChange={(e) => setFormParentMother(e.target.value)} placeholder="E.g. Ambar Lestari" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formParentMother} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormParentMother(e.target.value)} placeholder="E.g. Ambar Lestari" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Pekerjaan Utama Ayah</label>
-                        <input type="text" value={formParentJob} onChange={(e) => setFormParentJob(e.target.value)} placeholder="E.g. Wiraswasta" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" value={formParentJob} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormParentJob(e.target.value)} placeholder="E.g. Wiraswasta" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Kontak Telepon Wali</label>
-                        <input type="text" required value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="086789012345" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formPhone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormPhone(e.target.value)} placeholder="086789012345" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Email Login Wali</label>
-                        <input type="email" value={formParentEmail} onChange={(e) => setFormParentEmail(e.target.value)} placeholder={`${formNis || 'nis'}@wali.merdeka.id`} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="email" value={formParentEmail} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormParentEmail(e.target.value)} placeholder={`${formNis || 'nis'}@wali.merdeka.id`} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">Password Login Wali</label>
-                        <input type="text" required value={formParentPassword} onChange={(e) => setFormParentPassword(e.target.value)} placeholder="wali" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        <input type="text" required value={formParentPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormParentPassword(e.target.value)} placeholder="wali" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                       </div>
                     </div>
                   </div>
@@ -1751,27 +1751,27 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Nama Lengkap Guru</label>
-                      <input type="text" required value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Budi Santoso, S.Pd." className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                      <input type="text" required value={formName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormName(e.target.value)} placeholder="Budi Santoso, S.Pd." className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">NIP Pegawai</label>
-                      <input type="text" required value={formNip} onChange={(e) => setFormNip(e.target.value)} placeholder="198503122010121002" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                      <input type="text" required value={formNip} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormNip(e.target.value)} placeholder="198503122010121002" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Email Sekolah</label>
-                      <input type="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="budi@sekolah.sch.id" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                      <input type="email" required value={formEmail} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormEmail(e.target.value)} placeholder="budi@sekolah.sch.id" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">No Telepon Aktif</label>
-                      <input type="text" required value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="082345678901" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                      <input type="text" required value={formPhone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormPhone(e.target.value)} placeholder="082345678901" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="sm:col-span-2 space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Spesialisasi Mengajar (Mata Pelajaran)</label>
-                      <input type="text" required value={formSpecialization} onChange={(e) => setFormSpecialization(e.target.value)} placeholder="Matematika, IPA, Seni Rupa..." className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                      <input type="text" required value={formSpecialization} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormSpecialization(e.target.value)} placeholder="Matematika, IPA, Seni Rupa..." className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="sm:col-span-2 space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Alamat Rumah Lengkap</label>
-                      <textarea required value={formAddress} onChange={(e) => setFormAddress(e.target.value)} placeholder="Jl. Merpati No. 12..." rows={3} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+                      <textarea required value={formAddress} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormAddress(e.target.value)} placeholder="Jl. Merpati No. 12..." rows={3} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
                     </div>
                   </div>
                 </div>
@@ -1783,17 +1783,17 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Nama Kelas</label>
-                      <input type="text" required value={formClassName} onChange={(e) => setFormClassName(e.target.value)} placeholder="E.g. 1A, 2B, 6A" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                      <input type="text" required value={formClassName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormClassName(e.target.value)} placeholder="E.g. 1A, 2B, 6A" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Tingkatan Sekolah</label>
-                      <select value={formGradeLevel} onChange={(e) => setFormGradeLevel(Number(e.target.value))} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none">
+                      <select value={formGradeLevel} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormGradeLevel(Number(e.target.value))} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none">
                         {[1,2,3,4,5,6].map(lvl => <option key={lvl} value={lvl}>Tingkat SD {lvl}</option>)}
                       </select>
                     </div>
                     <div className="sm:col-span-2 space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Pilih Wali Kelas (Homeroom Teacher)</label>
-                      <select value={formHomeroomTeacher} onChange={(e) => setFormHomeroomTeacher(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none">
+                      <select value={formHomeroomTeacher} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormHomeroomTeacher(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none">
                         {teachers.map(t => {
                           const u = users.find(usr => usr.id === t.user_id);
                           return <option key={t.id} value={t.id}>{u?.name || 'Unbeknownst'} (NIP: {t.nip})</option>;
@@ -1809,12 +1809,12 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 block">Judul Pengumuman</label>
-                    <input type="text" required value={formAnnTitle} onChange={(e) => setFormAnnTitle(e.target.value)} placeholder="Lomba Mewarnai Hari Kemerdekaan..." className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                    <input type="text" required value={formAnnTitle} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormAnnTitle(e.target.value)} placeholder="Lomba Mewarnai Hari Kemerdekaan..." className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 block">Sasaran Target Pembaca</label>
-                      <select value={formAnnTarget} onChange={(e) => setFormAnnTarget(e.target.value as any)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none">
+                      <select value={formAnnTarget} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFormAnnTarget(e.target.value as any)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none">
                         <option value="semua">Semua Warga Sekolah</option>
                         <option value="guru">Khusus Bapak/Ibu Guru</option>
                         <option value="siswa">Khusus Siswa/Murid</option>
@@ -1823,7 +1823,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 block flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-600 flex items-center justify-between">
                         <span>Gambar Pendukung Mading (File Lokal / URL)</span>
                         {formAnnImage && (
                           <button
@@ -1840,7 +1840,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
                         {/* File Upload Area */}
-                        <div className="relative flex flex-col items-center justify-center border border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-3 bg-slate-50 hover:bg-slate-100/50 transition-colors cursor-pointer text-center min-h-[70px]">
+                        <div className="relative flex flex-col items-center justify-center border border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-3 bg-slate-50 hover:bg-slate-100/50 transition-colors cursor-pointer text-center min-h-17.5">
                           <input 
                             type="file" 
                             accept=".jpg,.jpeg,.png,.gif" 
@@ -1848,19 +1848,19 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                           />
                           <Upload className="w-4 h-4 text-blue-500 mb-1" />
-                          <span className="text-[10px] font-bold text-slate-700 block truncate max-w-[180px]">
+                          <span className="text-[10px] font-bold text-slate-700 block truncate max-w-45">
                             {formAnnImageName || 'Unggah Gambar Lokal'}
                           </span>
                           <span className="text-[9px] text-slate-400 block mt-0.5">JPEG, PNG, atau GIF</span>
                         </div>
 
                         {/* URL input Area */}
-                        <div className="flex flex-col justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl min-h-[70px]">
+                        <div className="flex flex-col justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl min-h-17.5">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Atau gunakan URL Gambar</span>
                           <input 
                             type="text" 
                             value={formAnnImage.startsWith('data:') ? '' : formAnnImage} 
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               setFormAnnImage(e.target.value);
                               setFormAnnImageName(e.target.value ? 'Gunakan URL' : '');
                             }} 
@@ -1876,7 +1876,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                           <img 
                             src={formAnnImage} 
                             alt="Preview Mading" 
-                            className="w-14 h-14 object-cover rounded-lg shadow-xs flex-shrink-0" 
+                            className="w-14 h-14 object-cover rounded-lg shadow-xs shrink-0" 
                             referrerPolicy="no-referrer"
                           />
                           <div className="min-w-0">
@@ -1891,7 +1891,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 block">Isi Pengumuman Lengkap</label>
-                    <textarea required value={formAnnContent} onChange={(e) => setFormAnnContent(e.target.value)} placeholder="Tulis rincian pengumuman disini..." rows={5} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+                    <textarea required value={formAnnContent} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormAnnContent(e.target.value)} placeholder="Tulis rincian pengumuman disini..." rows={5} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
                   </div>
                 </div>
               )}
@@ -1927,7 +1927,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
             animate={{ opacity: 1, scale: 1 }}
             className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 z-10"
           >
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-white flex justify-between items-center">
+            <div className="bg-linear-to-r from-amber-500 to-orange-600 p-6 text-white flex justify-between items-center">
               <div>
                 <h3 className="font-display font-bold text-lg flex items-center gap-2">
                   <Upload className="w-5 h-5" />

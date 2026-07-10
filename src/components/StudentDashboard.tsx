@@ -158,7 +158,7 @@ export default function StudentDashboard({ currentUser, onLogout }: StudentDashb
       
       {/* Visual Star celebration popup */}
       {isConfettiActive && (
-        <div className="fixed top-12 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-500 text-slate-900 px-6 py-4 rounded-3xl shadow-2xl border-4 border-white flex items-center gap-3 animate-bounce">
+        <div className="fixed top-12 left-1/2 transform -translate-x-1/2 z-50 bg-linear-to-r from-yellow-400 via-orange-400 to-amber-500 text-slate-900 px-6 py-4 rounded-3xl shadow-2xl border-4 border-white flex items-center gap-3 animate-bounce">
           <Smile className="w-8 h-8 text-slate-900 animate-spin" />
           <div className="font-display font-black text-xs sm:text-sm">
             <span>{celebrateText}</span>
@@ -168,9 +168,9 @@ export default function StudentDashboard({ currentUser, onLogout }: StudentDashb
       )}
 
       {/* Playful Kids Header Banner */}
-      <header className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white rounded-b-[40px] shadow-lg relative overflow-hidden">
+      <header className="bg-linear-to-r from-blue-500 via-indigo-500 to-purple-600 text-white rounded-b-[40px] shadow-lg relative overflow-hidden">
         {/* Childish background sparkles */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1.5px,transparent_1.5px)] [background-size:20px_20px]"></div>
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1.5px,transparent_1.5px)] bg-size-[20px_20px]"></div>
         
         <div className="max-w-7xl mx-auto px-6 py-8 sm:py-10 flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
@@ -419,7 +419,7 @@ export default function StudentDashboard({ currentUser, onLogout }: StudentDashb
                         </div>
 
                         {subRecord.status === 'dinilai' ? (
-                          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-2.5 rounded-lg border border-yellow-200/80 mt-2">
+                          <div className="bg-linear-to-r from-amber-50 to-yellow-50 p-2.5 rounded-lg border border-yellow-200/80 mt-2">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-extrabold text-[10px] text-amber-700 tracking-wider uppercase flex items-center gap-1">
                                 <ShieldCheck className="w-3.5 h-3.5 text-amber-500" /> Nilai dari Guru
@@ -441,13 +441,13 @@ export default function StudentDashboard({ currentUser, onLogout }: StudentDashb
                       <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200/60 space-y-2">
                         <label className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">Unggah Jawaban Tugas Anda (PDF/Gambar)</label>
                         <div className="flex items-center gap-1.5">
-                          <label className="flex-grow flex items-center justify-between px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 cursor-pointer transition-colors">
-                            <span className="truncate max-w-[150px]">{selectedFiles[asg.id]?.name || 'Pilih File Jawaban...'}</span>
+                          <label className="grow flex items-center justify-between px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 cursor-pointer transition-colors">
+                            <span className="truncate max-w-37.5">{selectedFiles[asg.id]?.name || 'Pilih File Jawaban...'}</span>
                             <Upload className="w-3.5 h-3.5 text-slate-400 ml-1 shrink-0" />
                             <input 
                               type="file"
                               accept=".pdf,image/*"
-                              onChange={(e) => handleStudentFileChange(asg.id, e)}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleStudentFileChange(asg.id, e)}
                               className="hidden"
                             />
                           </label>
@@ -512,7 +512,7 @@ export default function StudentDashboard({ currentUser, onLogout }: StudentDashb
             </p>
 
             {/* Print Container */}
-            <div className="p-5 bg-gradient-to-br from-indigo-50 via-slate-50 to-indigo-50/40 rounded-2xl border-2 border-dashed border-indigo-200 relative overflow-hidden flex flex-col items-center text-center">
+            <div className="p-5 bg-linear-to-br from-indigo-50 via-slate-50 to-indigo-50/40 rounded-2xl border-2 border-dashed border-indigo-200 relative overflow-hidden flex flex-col items-center text-center">
               {/* Decorative design elements */}
               <div className="absolute top-0 inset-x-0 h-1.5 bg-indigo-500"></div>
               
