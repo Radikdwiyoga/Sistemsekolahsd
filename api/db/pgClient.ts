@@ -1,13 +1,11 @@
 import { Pool } from 'pg';
 
-const caCert = process.env.DATABASE_CA_CERT;
-const connectionString = process.env.DATABASE_URL;
+const { PGHOST, PGPORT, PGUSER, PGPASSWORD, PGDATABASE } = process.env;
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL tidak ditemukan di environment variables');
-}
-if (!caCert) {
-  throw new Error('DATABASE_CA_CERT tidak ditemukan di environment variables');
+if (!PGHOST || !PGPORT || !PGUSER || !PGPASSWORD || !PGDATABASE) {
+  throw new Error(
+    'Environment variables database belum lengkap. Pastikan PGHOST, PGPORT, PGUSER, PGPASSWORD, dan PGDATABASE sudah diset.'
+  );
 }
 
 // Gunakan global supaya tidak membuat pool baru setiap function invocation
@@ -20,11 +18,12 @@ declare global {
 const pool =
   global.pgPool ||
   new Pool({
-    connectionString,
-    ssl: {
-      ca: caCert,
-      rejectUnauthorized: true,
-    },
+    host: PGHOST,
+    port: Number(PGPORT),
+    user: PGUSER,
+    password: PGPASSWORD,
+    database: PGDATABASE,
+    ssl: { rejectUnauthorized: false },
   });
 
 if (process.env.NODE_ENV !== 'production') {
