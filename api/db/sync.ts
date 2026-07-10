@@ -1,28 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { Pool } from 'pg';
+import pool from './pgClient';
 
-function getPool() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('Missing DATABASE_URL');
-  }
+type AnyReq = VercelRequest & { body?: any };
 
-  return new Pool({
-    connectionString,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  });
-}
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: AnyReq, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const pool = getPool();
-
     const tables = [
       { key: 'sd_merdeka_users', name: 'users' },
       { key: 'sd_merdeka_students', name: 'students' },
@@ -49,10 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     res.status(200).json(payload);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Database synchronization failed:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({ error: 'Database synchronization failed', details: errorMessage });
+    res.status(500).json({ error: 'Database synchronization failed', details: error?.message });
   }
 }
-
