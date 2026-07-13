@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   BookOpen, LogIn, Phone, MapPin, Menu, X, ChevronRight, 
-  Award, Heart, Calendar, ArrowRight, Eye, AlertCircle, Smile, Sparkles
+  Award, Heart, Calendar, ArrowRight, Eye, AlertCircle, Smile, Sparkles, Plus
 } from 'lucide-react';
 import { LocalDB, initializeDatabase } from '../lib/db';
 import { Announcement, Gallery } from '../types/database';
@@ -26,6 +26,11 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+
+  // Popup baca selengkapnya (untuk mading/pengumuman)
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
+  const [activeAnnouncement, setActiveAnnouncement] = useState<Announcement | null>(null);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -448,7 +453,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                     </div>
 
                     <button 
-                      onClick={() => { setIsLoginModalOpen(true); setError(''); }}
+                      onClick={() => { setActiveAnnouncement(ann); setIsAnnouncementModalOpen(true); }}
                       className="mt-6 text-blue-600 hover:text-blue-700 font-bold text-xs flex items-center gap-1 transition-colors self-start"
                     >
                       <span>Baca Selengkapnya</span>
@@ -602,6 +607,55 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
           <span>Dikelola dengan Cinta oleh Tim TI SDIT ABDUL HARIS</span>
         </div>
       </footer>
+
+      {/* Announcement Detail Modal */}
+      {isAnnouncementModalOpen && activeAnnouncement && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
+            onClick={() => {
+              setIsAnnouncementModalOpen(false);
+              setActiveAnnouncement(null);
+            }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 z-10"
+          >
+            <div className="bg-linear-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-start">
+              <div className="pr-6">
+                <h3 className="font-display font-bold text-xl">{activeAnnouncement.title}</h3>
+                <p className="text-blue-100 text-xs mt-1">
+                  {new Date(activeAnnouncement.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsAnnouncementModalOpen(false);
+                  setActiveAnnouncement(null);
+                }}
+                className="p-1.5 hover:bg-white/10 rounded-xl text-white/80 hover:text-white transition-colors focus:outline-none cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 sm:p-8">
+              <div className="space-y-4">
+                <div className="text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                  {activeAnnouncement.target_role === 'semua' ? 'Semua' : activeAnnouncement.target_role}
+                </div>
+                <div className="text-slate-700 whitespace-pre-wrap leading-relaxed text-sm">
+                  {activeAnnouncement.content}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Auth Portal Modal Dialog */}
       {isLoginModalOpen && (
