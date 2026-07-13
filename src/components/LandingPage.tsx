@@ -645,10 +645,22 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
             <div className="p-6 sm:p-8">
               <div className="space-y-4">
+                {activeAnnouncement.image_url ? (
+                  <div className="relative overflow-hidden rounded-2xl border border-slate-100">
+                    <img
+                      src={activeAnnouncement.image_url}
+                      alt={activeAnnouncement.title}
+                      className="w-full h-48 sm:h-56 object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                ) : null}
+
                 <div className="text-sm text-slate-500 font-semibold uppercase tracking-wider">
                   {activeAnnouncement.target_role === 'semua' ? 'Semua' : activeAnnouncement.target_role}
                 </div>
-                <div className="text-slate-700 whitespace-pre-wrap leading-relaxed text-sm">
+
+                <div className="text-slate-700 leading-relaxed text-sm break-words whitespace-pre-wrap">
                   {activeAnnouncement.content}
                 </div>
               </div>
