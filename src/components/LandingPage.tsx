@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   BookOpen, LogIn, Phone, MapPin, Menu, X, ChevronRight, 
   Award, Heart, Calendar, ArrowRight, Eye, AlertCircle, Smile, Sparkles
 } from 'lucide-react';
-import { LocalDB } from '../lib/db';
+import { LocalDB, initializeDatabase } from '../lib/db';
 import { Announcement, Gallery } from '../types/database';
 
 import logoImg from '../assets/images/sdit_abdul_haris_logo_1783590432054.jpeg';
@@ -22,12 +22,28 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Fetch announcements & gallery
-  const announcements: Announcement[] = LocalDB.getAnnouncements().filter(
-    (a) => a.target_role === 'semua' || a.target_role === 'siswa' || a.target_role === 'wali'
-  ).slice(0, 3);
+  // Fetch announcements & gallery — tunggu sinkronisasi database selesai dulu
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
-  const galleries: Gallery[] = LocalDB.getGallery();
+  useEffect(() => {
+    let isMounted = true;
+
+    initializeDatabase().then(() => {
+      if (!isMounted) return;
+
+      const filteredAnnouncements = LocalDB.getAnnouncements().filter(
+        (a) => a.target_role === 'semua' || a.target_role === 'siswa' || a.target_role === 'wali'
+      ).slice(0, 3);
+
+      setAnnouncements(filteredAnnouncements);
+      setGalleries(LocalDB.getGallery());
+      setIsDataLoading(false);
+    });
+
+    return () => { isMounted = false; };
+  }, []);
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -368,61 +384,81 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {announcements.map((ann, idx) => (
-              <motion.article 
-                key={ann.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full"
-              >
-                {ann.image_url ? (
-                  <div className="relative overflow-hidden h-48">
-                    <img 
-                      src={ann.image_url} 
-                      alt={ann.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                      Penting
-                    </div>
+          {isDataLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm h-96 animate-pulse">
+                  <div className="h-48 bg-slate-100"></div>
+                  <div className="p-6 sm:p-8 space-y-3">
+                    <div className="h-3 w-24 bg-slate-100 rounded"></div>
+                    <div className="h-5 w-3/4 bg-slate-100 rounded"></div>
+                    <div className="h-3 w-full bg-slate-100 rounded"></div>
+                    <div className="h-3 w-2/3 bg-slate-100 rounded"></div>
                   </div>
-                ) : (
-                  <div className="h-48 bg-linear-to-br from-blue-500 to-indigo-600 p-6 flex flex-col justify-between text-white">
-                    <BookOpen className="w-8 h-8 opacity-40" />
-                    <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full w-max">
-                      INFO SEKOLAH
-                    </span>
-                  </div>
-                )}
-                
-                <div className="p-6 sm:p-8 flex flex-col grow justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{new Date(ann.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                    </div>
-                    <h4 className="font-display font-bold text-lg text-slate-800 leading-snug group-hover:text-blue-600 transition-colors">
-                      {ann.title}
-                    </h4>
-                    <p className="text-slate-500 text-sm line-clamp-3 leading-relaxed">
-                      {ann.content}
-                    </p>
-                  </div>
-
-                  <button 
-                    onClick={() => { setIsLoginModalOpen(true); setError(''); }}
-                    className="mt-6 text-blue-600 hover:text-blue-700 font-bold text-xs flex items-center gap-1 transition-colors self-start"
-                  >
-                    <span>Baca Selengkapnya</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-              </motion.article>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : announcements.length === 0 ? (
+            <div className="text-center py-16 text-slate-400 font-medium text-sm">
+              Belum ada pengumuman yang diterbitkan.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {announcements.map((ann, idx) => (
+                <motion.article 
+                  key={ann.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full"
+                >
+                  {ann.image_url ? (
+                    <div className="relative overflow-hidden h-48">
+                      <img 
+                        src={ann.image_url} 
+                        alt={ann.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-4 left-4 bg-blue-600 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                        Penting
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-48 bg-linear-to-br from-blue-500 to-indigo-600 p-6 flex flex-col justify-between text-white">
+                      <BookOpen className="w-8 h-8 opacity-40" />
+                      <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full w-max">
+                        INFO SEKOLAH
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="p-6 sm:p-8 flex flex-col grow justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{new Date(ann.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
+                      <h4 className="font-display font-bold text-lg text-slate-800 leading-snug group-hover:text-blue-600 transition-colors">
+                        {ann.title}
+                      </h4>
+                      <p className="text-slate-500 text-sm line-clamp-3 leading-relaxed">
+                        {ann.content}
+                      </p>
+                    </div>
+
+                    <button 
+                      onClick={() => { setIsLoginModalOpen(true); setError(''); }}
+                      className="mt-6 text-blue-600 hover:text-blue-700 font-bold text-xs flex items-center gap-1 transition-colors self-start"
+                    >
+                      <span>Baca Selengkapnya</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
