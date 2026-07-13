@@ -50,13 +50,9 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
   const [gradingAssignmentId, setGradingAssignmentId] = useState<string>('');
 
   // Attendance Sub-Tabs & Recap State
-  const [attendanceSubTab, setAttendanceSubTab] = useState<'pencatatan' | 'rekap' | 'qr_scan'>('pencatatan');
+  const [attendanceSubTab, setAttendanceSubTab] = useState<'pencatatan' | 'rekap' >('pencatatan');
   const [recapMode, setRecapMode] = useState<'harian' | 'mingguan' | 'bulanan'>('bulanan');
   const [recapDate, setRecapDate] = useState(new Date().toISOString().split('T')[0]);
-
-  // QR Scanning States
-  const [qrSelectedStudentId, setQrSelectedStudentId] = useState('');
-  const [isQrScanning, setIsQrScanning] = useState(false);
 
   // Attendance Sheet state (Student ID -> Status)
   const [attendanceSheet, setAttendanceSheet] = useState<Record<string, 'hadir' | 'sakit' | 'izin' | 'alpha'>>({});
@@ -347,12 +343,6 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
     showToast(`Nilai berhasil disimpan untuk ${updatedSubm.student_name}!`);
   };
 
-  // QR scan flow akan dihapus dari fitur simulasi. Di fase ini absensi tetap melalui Input Manual & Rekap.
-  // (Implementasi scan kamera live akan ditambahkan pada iterasi berikutnya.)
-  const handleRemoveQRCodeSim = () => {
-    // noop: tombol akan dihapus dari UI
-  };
-
 
 
   const handleDownloadRekapGrades = () => {
@@ -574,13 +564,12 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="font-display font-extrabold text-2xl text-slate-800">Sistem Presensi Kelas {teacherClass?.name}</h1>
-                <p className="text-slate-500 text-sm mt-0.5">Kelola kehadiran murid dengan input manual, rekap bulanan, maupun scan kartu QR Code.</p>
+                <p className="text-slate-500 text-sm mt-0.5">Kelola kehadiran murid dengan input manual, rekap bulanan.</p>
               </div>
               <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl">
                 {[
                   { id: 'pencatatan', label: 'Input Manual', icon: UserCheck },
                   { id: 'rekap', label: 'Rekap & Laporan', icon: ListTodo },
-                  { id: 'qr_scan', label: 'Scan QR Code', icon: QrCode },
                 ].map((subTab) => {
                   const SubIcon = subTab.icon;
                   const isSubActive = attendanceSubTab === subTab.id;
@@ -903,89 +892,6 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            )}
-
-            {/* QR-CODE SCAN SUB-TAB */}
-            {attendanceSubTab === 'qr_scan' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                  <h3 className="font-display font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <QrCode className="w-5 h-5 text-blue-600" />
-                    Simulasi Kamera Scan Kartu Siswa
-                  </h3>
-
-                  <div className="relative aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex flex-col items-center justify-center text-center">
-                    {/* Glowing scanner frame */}
-                    <div className="absolute inset-4 border-2 border-dashed border-blue-500 rounded-xl opacity-60 pointer-events-none"></div>
-                    
-                    {/* Scanner line animation */}
-                    {isQrScanning && (
-                      <motion.div 
-                        animate={{ top: ['10%', '90%', '10%'] }}
-                        transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-                        className="absolute left-4 right-4 h-0.5 bg-blue-500 shadow-lg shadow-blue-500 z-10"
-                      />
-                    )}
-
-                    <div className="space-y-3 z-10 p-4">
-                      {isQrScanning ? (
-                        <>
-                          <div className="p-3 bg-blue-600/20 text-blue-400 rounded-full w-max mx-auto animate-pulse">
-                            <Camera className="w-6 h-6 animate-spin" />
-                          </div>
-                          <span className="text-xs font-bold text-blue-400 tracking-wider uppercase block">Membaca QR Code Siswa...</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="p-3 bg-slate-800 text-slate-400 rounded-full w-max mx-auto">
-                            <Camera className="w-6 h-6" />
-                          </div>
-                          <span className="text-xs font-bold text-slate-400 block uppercase">Lensa Pemindai Siap Sedia</span>
-                          <span className="text-[10px] text-slate-500 block">Arahkan QR Code Kartu Murid ke kamera atau gunakan simulasi manual di bawah.</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Manual Simulation control block */}
-                  <div className="space-y-4 pt-4 border-t border-slate-100">
-                      <button
-                      type="button"
-                      disabled
-                      className={`w-full py-3.5 font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-not-allowed transition-all bg-slate-100 text-slate-400`}
-                    >
-                      <QrCode className="w-4 h-4" />
-                      <span>Fitur Scan QR Disabilkan</span>
-                    </button>
-                    <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                      Fitur simulasi scan QR dihapus. Absensi dilakukan melalui Input Manual atau Rekap.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-                  <h3 className="font-display font-bold text-lg text-slate-800">Petunjuk Penggunaan Fitur Absensi QR</h3>
-                  
-                  <div className="space-y-4 text-xs text-slate-600 font-medium leading-relaxed">
-                    <div className="flex gap-3">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-xl h-max font-bold">1</div>
-                      <p>Siswa dapat mengakses dan mencetak/menyimpan kartu identitas QR Code mereka masing-masing dari portal akun siswa.</p>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-xl h-max font-bold">2</div>
-                      <p>Guru menggunakan kamera laptop/handphone di portal ini untuk memindai kartu QR siswa setiap pagi saat memasuki gerbang atau kelas.</p>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-xl h-max font-bold">3</div>
-                      <p>Begitu QR Code terdeteksi, status presensi siswa yang bersangkutan akan langsung terupdate menjadi <strong>Hadir</strong> secara real-time.</p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-[11px] text-amber-800 font-semibold leading-relaxed mt-4">
-                    📢 Siswa dilarang mencatat presensi sendiri. Guru memegang hak kontrol penuh perangkat scanner ini demi integritas rekap absensi sekolah.
-                  </div>
                 </div>
               </div>
             )}
