@@ -347,64 +347,13 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
     showToast(`Nilai berhasil disimpan untuk ${updatedSubm.student_name}!`);
   };
 
-  // Simulate scanning QR Code for attendance automatically
-  const handleSimulateQRScan = () => {
-    if (students.length === 0) {
-      alert('Tidak ada siswa aktif dalam kelas ini untuk dipresensi!');
-      return;
-    }
-
-    setIsQrScanning(true);
-    
-    setTimeout(() => {
-      setIsQrScanning(false);
-      
-      const todayString = new Date().toISOString().split('T')[0];
-      const currentAttendances = LocalDB.getAttendances();
-
-      // Find students who are NOT yet marked as present ('hadir') today
-      const todayPresents = currentAttendances.filter(a => a.date === todayString && a.status === 'hadir');
-      const presentStudentIds = todayPresents.map(a => a.student_id);
-      
-      const remainingStudents = students.filter(s => !presentStudentIds.includes(s.id));
-      
-      let targetStudent = null;
-      if (remainingStudents.length > 0) {
-        // Pick the first remaining student
-        targetStudent = remainingStudents[0];
-      } else {
-        // All students are already present, pick a random student
-        targetStudent = students[Math.floor(Math.random() * students.length)];
-      }
-
-      if (!targetStudent) {
-        alert('Tidak ada siswa aktif dalam kelas ini!');
-        return;
-      }
-
-      const studentId = targetStudent.id;
-      let currentAtnd = [...currentAttendances];
-
-      // Filter out existing record today for this student
-      currentAtnd = currentAtnd.filter(a => !(a.date === todayString && a.student_id === studentId));
-
-      // Append present record
-      currentAtnd.push({
-        id: `at-gen-${studentId}-${todayString}`,
-        student_id: studentId,
-        date: todayString,
-        status: 'hadir',
-        notes: 'Hadir otomatis via Scan QR Code Kamera',
-        recorded_by: teacher?.id || 't-unknown'
-      });
-
-      LocalDB.setAttendances(currentAtnd);
-      refreshData();
-      
-      const matchedUser = users.find(u => u.id === targetStudent.user_id);
-      showToast(`Scan QR Berhasil! Siswa ${matchedUser?.name || ''} otomatis terdeteksi & dicatat HADIR.`);
-    }, 1500);
+  // QR scan flow akan dihapus dari fitur simulasi. Di fase ini absensi tetap melalui Input Manual & Rekap.
+  // (Implementasi scan kamera live akan ditambahkan pada iterasi berikutnya.)
+  const handleRemoveQRCodeSim = () => {
+    // noop: tombol akan dihapus dari UI
   };
+
+
 
   const handleDownloadRekapGrades = () => {
     if (!selectedSubjectId) {
@@ -1002,21 +951,16 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
 
                   {/* Manual Simulation control block */}
                   <div className="space-y-4 pt-4 border-t border-slate-100">
-                    <button
+                      <button
                       type="button"
-                      disabled={isQrScanning}
-                      onClick={handleSimulateQRScan}
-                      className={`w-full py-3.5 font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                        isQrScanning 
-                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                          : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
-                      }`}
+                      disabled
+                      className={`w-full py-3.5 font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-not-allowed transition-all bg-slate-100 text-slate-400`}
                     >
                       <QrCode className="w-4 h-4" />
-                      <span>{isQrScanning ? 'Memproses Scan...' : 'Mulai Pindai Kartu QR (Kamera)'}</span>
+                      <span>Fitur Scan QR Disabilkan</span>
                     </button>
                     <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                      Sistem akan secara instan mensimulasikan pemindaian kamera dan otomatis mendeteksi identitas QR Code kartu pelajar siswa kelas {teacherClass?.name || ''} yang melakukan tapping kehadiran secara berurutan.
+                      Fitur simulasi scan QR dihapus. Absensi dilakukan melalui Input Manual atau Rekap.
                     </p>
                   </div>
                 </div>
