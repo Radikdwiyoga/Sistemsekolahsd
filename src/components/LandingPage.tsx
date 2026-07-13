@@ -40,7 +40,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
       const filteredAnnouncements = LocalDB.getAnnouncements().filter(
         (a) => a.target_role === 'semua' || a.target_role === 'siswa' || a.target_role === 'wali'
-      ).slice(0, 3);
+      );
 
       setAnnouncements(filteredAnnouncements);
       setGalleries(LocalDB.getGallery());
