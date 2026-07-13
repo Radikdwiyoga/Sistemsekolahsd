@@ -532,7 +532,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-800 text-sm">Kontak Pelayanan</h4>
-                  <p className="text-slate-500 text-sm leading-relaxed">(021) 7654-3210 / +62 812-3456-7890</p>
+                  <p className="text-slate-500 text-sm leading-relaxed">089630637930</p>
                 </div>
               </div>
             </div>
@@ -660,7 +660,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                   {activeAnnouncement.target_role === 'semua' ? 'Semua' : activeAnnouncement.target_role}
                 </div>
 
-                <div className="text-slate-700 leading-relaxed text-sm break-words whitespace-pre-wrap">
+                <div className="text-slate-700 leading-relaxed text-sm wrap-break-word whitespace-pre-wrap">
                   {activeAnnouncement.content}
                 </div>
               </div>
