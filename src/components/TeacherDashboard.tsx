@@ -5,6 +5,9 @@ import {
   Plus, Edit, Save, ListTodo, UserCheck, Award, FileText, AlertCircle,
   Camera, Download, Upload, CheckCircle, QrCode, RefreshCw, Eye
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { LocalDB } from '../lib/db';
 import { 
   User, Teacher, Student, SchoolClass, Subject, Schedule, 
@@ -395,6 +398,131 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
     showToast('Laporan Rekap Nilai berhasil diunduh dalam format CSV!');
   };
 
+  const formatDownloadFilename = (base: string) => {
+    return base
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_\-\.]/g, '');
+  };
+
+  const getTeacherKelasName = () => teacherClass?.name || 'Kelas';
+
+  const getRekapAbsensiRows = () => {
+    const kelasName = getTeacherKelasName();
+
+    if (recapMode === 'harian') {
+      return {
+        title: `Rekap Absensi Harian - ${new Date(recapDate).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`,
+        kelasName,
+        headers: ['Nama Siswa', 'NIS', 'Status Kehadiran', 'Catatan Khusus'],
+        rows: students.map((s) => {
+          const u = users.find((usr) => usr.id === s.user_id);
+          const record = attendances.find((at) => at.student_id === s.id && at.date === recapDate);
+          return [u?.name || 'Unknown', s.nis, record?.status || 'Belum Diabsen', record?.notes || '-'];
+        })
+      };
+    }
+
+    if (recapMode === 'mingguan') {
+      return {
+        title: 'Rekap Absensi Mingguan (7 Hari Terakhir)',
+        kelasName,
+        headers: ['Nama Siswa', 'Kehadiran (H/S/I/A)', 'Tingkat Kehadiran'],
+        rows: students.map((s) => {
+          const u = users.find((usr) => usr.id === s.user_id);
+          const recs = attendances.filter((at) => at.student_id === s.id);
+          const hCount = recs.filter((at) => at.status === 'hadir').length;
+          const sCount = recs.filter((at) => at.status === 'sakit').length;
+          const iCount = recs.filter((at) => at.status === 'izin').length;
+          const aCount = recs.filter((at) => at.status === 'alpha').length;
+          const totalAbsen = recs.length;
+          const rate = totalAbsen > 0 ? Math.round((hCount / totalAbsen) * 100) : 100;
+          return [u?.name || 'Unknown', `${hCount} H / ${sCount} S / ${iCount} I / ${aCount} A`, `${rate}%`];
+        })
+      };
+    }
+
+    // bulanan
+    return {
+      title: 'Rekap Absensi Bulanan',
+      kelasName,
+      headers: ['Nama Siswa', 'Hadir (H)', 'Sakit (S)', 'Izin (I)', 'Alpha (A)', 'Persentase Kehadiran'],
+      rows: students.map((s) => {
+        const u = users.find((usr) => usr.id === s.user_id);
+        const recs = attendances.filter((at) => at.student_id === s.id);
+        const h = recs.filter((at) => at.status === 'hadir').length;
+        const sCount = recs.filter((at) => at.status === 'sakit').length;
+        const i = recs.filter((at) => at.status === 'izin').length;
+        const a = recs.filter((at) => at.status === 'alpha').length;
+        const total = recs.length;
+        const pct = total > 0 ? Math.round(((h + sCount + i) / total) * 100) : 100;
+        return [u?.name || 'Unknown', h, sCount, i, a, `${pct}%`];
+      })
+    };
+  };
+
+  const handleDownloadRekapAbsensiPdf = () => {
+    if (!students.length) {
+      alert('Belum ada data siswa untuk rekap absensi.');
+      return;
+    }
+
+    const { title, kelasName, headers, rows } = getRekapAbsensiRows();
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`SD MERDEKA - ${title}`, 20, 30);
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Kelas: ${kelasName}`, 20, 45);
+
+    autoTable(doc, {
+      startY: 60,
+      head: [headers],
+      body: rows,
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [30, 41, 59],
+        fontStyle: 'bold',
+      },
+      theme: 'grid',
+    });
+
+    const datePart = recapMode === 'harian' ? recapDate : recapMode;
+    doc.save(formatDownloadFilename(`Rekap_Absensi_${recapMode}_${datePart}_Kelas_${kelasName}.pdf`));
+    showToast('Rekap Absensi berhasil diunduh dalam format PDF!');
+  };
+
+  const handleDownloadRekapAbsensiExcel = () => {
+    if (!students.length) {
+      alert('Belum ada data siswa untuk rekap absensi.');
+      return;
+    }
+
+    const { title, kelasName, headers, rows } = getRekapAbsensiRows();
+
+    const aoa: any[][] = [];
+    aoa.push([`SD MERDEKA`, `Laporan: ${title}`]);
+    aoa.push([`Kelas: ${kelasName}`]);
+    aoa.push([]);
+    aoa.push(headers);
+    rows.forEach((r: any[]) => aoa.push(r));
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rekap Absensi');
+
+    const datePart = recapMode === 'harian' ? recapDate : recapMode;
+    const fileName = formatDownloadFilename(`Rekap_Absensi_${recapMode}_${datePart}_Kelas_${kelasName}.xlsx`);
+    XLSX.writeFile(workbook, fileName);
+    showToast('Rekap Absensi berhasil diunduh dalam format Excel!');
+  };
+
   const handleDeleteAssignment = (id: string) => {
     if (!window.confirm('Hapus tugas ini?')) return;
     const current = LocalDB.getAssignments().filter(a => a.id !== id);
@@ -703,17 +831,37 @@ export default function TeacherDashboard({ currentUser, onLogout }: TeacherDashb
                     ))}
                   </div>
 
-                  {recapMode === 'harian' && (
-                    <div className="flex items-center gap-2 text-xs font-bold">
-                      <span className="text-slate-500">Pilih Tanggal:</span>
-                      <input 
-                        type="date" 
-                        value={recapDate}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecapDate(e.target.value)}
-                        className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-xs"
-                      />
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {recapMode === 'harian' && (
+                      <div className="flex items-center gap-2 text-xs font-bold">
+                        <span className="text-slate-500">Pilih Tanggal:</span>
+                        <input 
+                          type="date" 
+                          value={recapDate}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecapDate(e.target.value)}
+                          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none text-xs"
+                        />
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleDownloadRekapAbsensiPdf}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      type="button"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>PDF</span>
+                    </button>
+
+                    <button
+                      onClick={handleDownloadRekapAbsensiExcel}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                      type="button"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Excel</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Recap Content */}
