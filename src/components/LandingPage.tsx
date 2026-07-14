@@ -5,14 +5,14 @@ import {
   Award, Heart, Calendar, ArrowRight, Eye, AlertCircle, Smile, Sparkles, Plus
 } from 'lucide-react';
 import { LocalDB, initializeDatabase } from '../lib/db';
-import { Announcement, Gallery } from '../types/database';
+import { Announcement, Gallery, User } from '../types/database';
 
 import logoImg from '../assets/images/sdit_abdul_haris_logo_1783590432054.jpeg';
 import buildingImg from '../assets/images/sdit_abdul_haris_building_1783590444165.jpeg';
 import teachersImg from '../assets/images/sdit_abdul_haris_teachers_1783590457342.jpeg';
 
 interface LandingPageProps {
-  onLoginSuccess: (userEmail: string, role: string) => void;
+  onLoginSuccess: (user: User) => void;
 }
 
 export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
@@ -50,32 +50,35 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
     return () => { isMounted = false; };
   }, []);
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoggingIn(true);
 
-    const users = LocalDB.getUsers();
-    const matchedUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // send/receive the session cookie
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (!matchedUser) {
-      setError('Email tidak terdaftar!');
-      return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Email atau password salah.');
+        return;
+      }
+
+      onLoginSuccess(data.user);
+      setIsLoginModalOpen(false);
+    } catch (err) {
+      setError('Gagal terhubung ke server. Coba lagi.');
+    } finally {
+      setIsLoggingIn(false);
     }
-
-    if (!matchedUser.is_active) {
-      setError('Akun Anda dinonaktifkan sementara.');
-      return;
-    }
-
-    // Since this is a high-fidelity local storage simulator, we accept simple matching password or role presets
-    // Admin: admin, Guru: guru, Siswa: siswa, Wali: wali
-    const expectedPass = matchedUser.role;
-    if (password && password !== expectedPass && password !== 'password123') {
-      // Just support default logins easily
-    }
-
-    onLoginSuccess(matchedUser.email, matchedUser.role);
-    setIsLoginModalOpen(false);
   };
 
   const handleQuickLogin = (roleEmail: string, rolePass: string) => {
@@ -723,17 +726,18 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
                   required
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                  placeholder="Sandi login Anda (e.g. admin, guru, siswa, wali)"
+                  placeholder="Sandi login Anda"
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm transition-shadow"
                 />
               </div>
 
               <button 
                 type="submit"
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-md transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer"
+                disabled={isLoggingIn}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-md transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Masuk Sekarang</span>
+                <span>{isLoggingIn ? 'Memproses...' : 'Masuk Sekarang'}</span>
               </button>
             </form>
 
@@ -743,7 +747,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <button 
                   type="button"
-                  onClick={() => handleQuickLogin('admin@sekolah.sch.id', 'admin')}
+                  onClick={() => handleQuickLogin('admin@sekolah.sch.id', 'admin123!Demo')}
                   className="p-2.5 bg-white border border-slate-200 rounded-xl hover:border-blue-500 transition-colors text-left font-medium text-slate-700 hover:text-blue-600"
                 >
                   <span className="font-bold block text-blue-600">🔑 Admin</span>
@@ -752,7 +756,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
                 <button 
                   type="button"
-                  onClick={() => handleQuickLogin('budi@sekolah.sch.id', 'guru')}
+                  onClick={() => handleQuickLogin('budi@sekolah.sch.id', 'guru123!Demo')}
                   className="p-2.5 bg-white border border-slate-200 rounded-xl hover:border-blue-500 transition-colors text-left font-medium text-slate-700 hover:text-blue-600"
                 >
                   <span className="font-bold block text-blue-600">👩‍🏫 Guru (Budi)</span>
@@ -761,7 +765,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
                 <button 
                   type="button"
-                  onClick={() => handleQuickLogin('kiki@sekolah.sch.id', 'siswa')}
+                  onClick={() => handleQuickLogin('kiki@sekolah.sch.id', 'siswa123!Demo')}
                   className="p-2.5 bg-white border border-slate-200 rounded-xl hover:border-blue-500 transition-colors text-left font-medium text-slate-700 hover:text-blue-600"
                 >
                   <span className="font-bold block text-blue-600">🎒 Siswa (Kiki)</span>
@@ -770,7 +774,7 @@ export default function LandingPage({ onLoginSuccess }: LandingPageProps) {
 
                 <button 
                   type="button"
-                  onClick={() => handleQuickLogin('joko@gmail.com', 'wali')}
+                  onClick={() => handleQuickLogin('joko@gmail.com', 'wali123!Demo')}
                   className="p-2.5 bg-white border border-slate-200 rounded-xl hover:border-blue-500 transition-colors text-left font-medium text-slate-700 hover:text-blue-600"
                 >
                   <span className="font-bold block text-blue-600">👨‍👩‍👦 Wali (Pak Joko)</span>

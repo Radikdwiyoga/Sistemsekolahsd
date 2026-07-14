@@ -30,7 +30,11 @@ export default async function handler(req: AnyReq, res: VercelResponse) {
     const payload: Record<string, any[]> = {};
 
     for (const table of tables) {
-      const result = await pool.query(`SELECT * FROM ${table.name}`);
+      // Never ship the password hash to the client.
+      const columns = table.name === 'users'
+        ? 'id, name, email, role, phone, avatar, is_active, created_at, updated_at'
+        : '*';
+      const result = await pool.query(`SELECT ${columns} FROM ${table.name}`);
       payload[table.key] = result.rows;
     }
 

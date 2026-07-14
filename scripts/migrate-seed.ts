@@ -1,19 +1,44 @@
+import 'dotenv/config';
 import pkg from 'pg';
+import bcrypt from 'bcrypt';
 
 // Disable TLS verification to handle Aiven PostgreSQL self-signed certificates
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const { Client } = pkg;
 
-// Use DATABASE_URL from environment variables
-const connectionString = process.env.DATABASE_URL || 'postgres://user:password@hostname:port/dbname?sslmode=require';
+// ⚠️ DEMO PASSWORDS — these only exist so the "quick login" buttons on the landing page
+// keep working during development/demo. They match the buttons in LandingPage.tsx.
+// BEFORE GOING LIVE: remove the quick-login buttons and change every account's password
+// (e.g. via a proper "forgot password" / admin-managed reset flow) — do not ship this
+// script's default passwords to a real production database.
+const DEMO_PASSWORDS: Record<string, string> = {
+  admin: 'admin123!Demo',
+  guru: 'guru123!Demo',
+  siswa: 'siswa123!Demo',
+  wali: 'wali123!Demo',
+};
 
-const client = new Client({
-  connectionString,
-  ssl: {
-    rejectUnauthorized: false // Aiven requires SSL, this bypasses self-signed cert issues
-  }
-});
+// Use the same PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE vars as .env and api/db/pgClient.ts
+// (previously this read DATABASE_URL, which doesn't exist in .env — this script never actually
+// connected successfully before).
+const { PGHOST, PGPORT, PGUSER, PGPASSWORD, PGDATABASE, DATABASE_URL } = process.env;
+
+if (!DATABASE_URL && (!PGHOST || !PGPORT || !PGUSER || !PGPASSWORD || !PGDATABASE)) {
+  console.error('❌ Env var database belum lengkap. Set PGHOST, PGPORT, PGUSER, PGPASSWORD, PGDATABASE di .env (atau DATABASE_URL).');
+  process.exit(1);
+}
+
+const client = DATABASE_URL
+  ? new Client({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  : new Client({
+      host: PGHOST,
+      port: Number(PGPORT),
+      user: PGUSER,
+      password: PGPASSWORD,
+      database: PGDATABASE,
+      ssl: { rejectUnauthorized: false }, // Aiven requires SSL, this bypasses self-signed cert issues
+    });
 
 // Seed data corresponding directly to local storage definitions
 const academicYears = [
@@ -324,6 +349,7 @@ async function migrateAndSeed() {
       DROP TABLE IF EXISTS teachers CASCADE;
       DROP TABLE IF EXISTS parents CASCADE;
       DROP TABLE IF EXISTS announcements CASCADE;
+      DROP TABLE IF EXISTS sessions CASCADE;
       DROP TABLE IF EXISTS users CASCADE;
       DROP TABLE IF EXISTS subjects CASCADE;
       DROP TABLE IF EXISTS academic_years CASCADE;
@@ -357,6 +383,18 @@ async function migrateAndSeed() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Sessions (backs the login system in src/server/auth — works on Vercel serverless too,
+    // since session state lives here in Postgres instead of in server memory)
+    await client.query(`
+      CREATE TABLE sessions (
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(50) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+      );
+    `);
+    await client.query(`CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);`);
 
     // Parents
     await client.query(`
@@ -546,9 +584,11 @@ async function migrateAndSeed() {
 
     // Seed Users
     for (const u of users) {
+      const plainPassword = DEMO_PASSWORDS[u.role] || 'ganti123!Demo';
+      const passwordHash = await bcrypt.hash(plainPassword, 10);
       await client.query(
-        'INSERT INTO users (id, name, email, role, phone, avatar, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-        [u.id, u.name, u.email, u.role, u.phone, u.avatar, u.is_active, u.created_at, u.updated_at]
+        'INSERT INTO users (id, name, email, password, role, phone, avatar, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [u.id, u.name, u.email, passwordHash, u.role, u.phone, u.avatar, u.is_active, u.created_at, u.updated_at]
       );
     }
 
@@ -650,6 +690,14 @@ async function migrateAndSeed() {
 
     console.log('✅ Seeding completed successfully!');
     console.log('🚀 Aiven PostgreSQL database is now ready for use!');
+    console.log('');
+    console.log('🔑 Demo login credentials (matches the quick-login buttons on the landing page):');
+    console.log('   admin@sekolah.sch.id  /', DEMO_PASSWORDS.admin);
+    console.log('   budi@sekolah.sch.id   /', DEMO_PASSWORDS.guru);
+    console.log('   kiki@sekolah.sch.id   /', DEMO_PASSWORDS.siswa);
+    console.log('   joko@gmail.com        /', DEMO_PASSWORDS.wali);
+    console.log('⚠️  These are DEMO passwords only. Remove the quick-login buttons and change');
+    console.log('    every password before this goes live with real student/parent data.');
 
   } catch (error) {
     console.error('❌ Error during migration & seeding:', error);

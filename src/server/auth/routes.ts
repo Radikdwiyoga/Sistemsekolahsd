@@ -1,49 +1,66 @@
-import type { Request, Response } from 'express';
-import express from 'express';
 import { verifyUserCredentials } from './authStore.js';
+import { createSession, deleteSession, getUserBySession, SESSION_TTL_SECONDS } from './sessionStore.js';
+import { parseCookies, serializeSessionCookie, clearSessionCookie, SESSION_COOKIE_NAME } from './cookies.js';
 
-interface RequestWithSession extends Request {
-  session: any;
+// Minimal shape shared by Express's (req, res) and Vercel's (VercelRequest, VercelResponse) —
+// both are compatible with this subset, so the same handler works unmodified in either runtime.
+interface MinimalRequest {
+  method?: string;
+  body?: any;
+  headers: Record<string, string | string[] | undefined>;
+}
+interface MinimalResponse {
+  status: (code: number) => MinimalResponse;
+  json: (body: any) => any;
+  setHeader: (name: string, value: string) => any;
 }
 
-const router = express.Router();
+export async function loginHandler(req: MinimalRequest, res: MinimalResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-router.post('/login', async (req: Request, res: Response) => {
-  const sessionReq = req as RequestWithSession;
   const { email, password } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ error: 'email dan password wajib diisi' });
+    return res.status(400).json({ error: 'Email dan password wajib diisi.' });
   }
 
   const user = await verifyUserCredentials(String(email), String(password));
   if (!user) {
-    return res.status(401).json({ error: 'Email atau password salah / akun non-aktif.' });
+    return res.status(401).json({ error: 'Email atau password salah, atau akun non-aktif.' });
   }
 
-  // prevent session fixation: regenerate
-  sessionReq.session.regenerate((err: any) => {
-    if (err) {
-      return res.status(500).json({ error: 'Gagal membuat session.' });
-    }
+  const { sessionId } = await createSession(user.id);
+  res.setHeader('Set-Cookie', serializeSessionCookie(sessionId, SESSION_TTL_SECONDS));
+  return res.status(200).json({ success: true, user });
+}
 
-    sessionReq.session.user = user;
-    return res.json({ success: true, user });
-  });
-});
+export async function logoutHandler(req: MinimalRequest, res: MinimalResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-router.post('/logout', (req: Request, res: Response) => {
-  const sessionReq = req as RequestWithSession;
-  sessionReq.session.destroy(() => {
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
-  });
-});
+  const cookies = parseCookies(req.headers.cookie as string | undefined);
+  await deleteSession(cookies[SESSION_COOKIE_NAME]);
+  res.setHeader('Set-Cookie', clearSessionCookie());
+  return res.status(200).json({ success: true });
+}
 
-router.get('/me', (req: Request, res: Response) => {
-  const sessionReq = req as RequestWithSession;
-  if (!sessionReq.session.user) return res.status(200).json({ user: null });
-  return res.status(200).json({ user: sessionReq.session.user });
-});
+export async function meHandler(req: MinimalRequest, res: MinimalResponse) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-export const authRoutes = router;
+  const cookies = parseCookies(req.headers.cookie as string | undefined);
+  const user = await getUserBySession(cookies[SESSION_COOKIE_NAME]);
+  return res.status(200).json({ user });
+}
 
+/**
+ * Helper for protecting other endpoints (e.g. /api/db/sync, /api/db/update).
+ * Returns the logged-in user, or null if there isn't one — caller decides how to respond.
+ */
+export async function getRequestUser(req: MinimalRequest) {
+  const cookies = parseCookies(req.headers.cookie as string | undefined);
+  return getUserBySession(cookies[SESSION_COOKIE_NAME]);
+}

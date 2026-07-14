@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import pkg from 'pg';
 import { createServer as createViteServer } from 'vite';
+import { loginHandler, logoutHandler, meHandler } from './src/server/auth/index.js';
 
 // Disable TLS verification to handle Aiven PostgreSQL self-signed certificates
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -20,6 +22,11 @@ const pool = new Pool({
 });
 
 app.use(express.json({ limit: '50mb' })); // support large payloads for Base64 proof images
+
+// Auth (mirrors api/auth/*.ts so local dev behaves the same as the Vercel deployment)
+app.post('/api/auth/login', loginHandler);
+app.post('/api/auth/logout', logoutHandler);
+app.get('/api/auth/me', meHandler);
 
 // API 1: Sync cache on load
 app.get('/api/db/sync', async (req, res) => {
@@ -45,7 +52,11 @@ app.get('/api/db/sync', async (req, res) => {
     const payload: Record<string, any[]> = {};
 
     for (const table of tables) {
-      const result = await pool.query(`SELECT * FROM ${table.name}`);
+      // Never ship the password hash to the client.
+      const columns = table.name === 'users'
+        ? 'id, name, email, role, phone, avatar, is_active, created_at, updated_at'
+        : '*';
+      const result = await pool.query(`SELECT ${columns} FROM ${table.name}`);
       payload[table.key] = result.rows;
     }
 

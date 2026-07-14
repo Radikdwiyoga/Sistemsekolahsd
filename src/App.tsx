@@ -11,35 +11,35 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check persistent session on mount
+  // Check for an existing server-side session on mount (cookie is sent automatically).
   useEffect(() => {
-    // This also triggers LocalDB initial seed on load
-    const users = LocalDB.getUsers();
-    
-    const storedUserEmail = localStorage.getItem('sd_merdeka_session_user_email');
-    if (storedUserEmail) {
-      const foundUser = users.find(u => u.email.toLowerCase() === storedUserEmail.toLowerCase() && u.is_active);
-      if (foundUser) {
-        setCurrentUser(foundUser);
-      } else {
-        localStorage.removeItem('sd_merdeka_session_user_email');
-      }
-    }
-    setLoading(false);
+    let isMounted = true;
+
+    // Still triggers LocalDB's initial seed/cache load for the rest of the app's data.
+    LocalDB.getUsers();
+
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted) setCurrentUser(data.user ?? null);
+      })
+      .catch(() => {
+        if (isMounted) setCurrentUser(null);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => { isMounted = false; };
   }, []);
 
-  const handleLoginSuccess = (userEmail: string) => {
-    const users = LocalDB.getUsers();
-    const foundUser = users.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
-    if (foundUser && foundUser.is_active) {
-      setCurrentUser(foundUser);
-      localStorage.setItem('sd_merdeka_session_user_email', foundUser.email);
-    }
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
   };
 
   const handleLogout = () => {
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     setCurrentUser(null);
-    localStorage.removeItem('sd_merdeka_session_user_email');
   };
 
   if (loading) {
