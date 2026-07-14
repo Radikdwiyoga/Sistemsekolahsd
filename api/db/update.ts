@@ -35,6 +35,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const client = await pool.connect();
 
   try {
+    // Safety net: refuse to blindly wipe a table that currently has rows if the client
+    // sent an empty array. A legit "delete everything" action is extremely rare from this
+    // app's UI — an empty payload here is far more likely a stale/uninitialized client cache.
+    if (!Array.isArray(data) || data.length === 0) {
+      const existing = await client.query(`SELECT COUNT(*) FROM ${tableName}`);
+      const existingCount = Number(existing.rows[0].count);
+      if (existingCount > 0) {
+        client.release();
+        return res.status(409).json({
+          error: `Ditolak: percobaan mengosongkan tabel "${tableName}" yang saat ini berisi ${existingCount} baris, ` +
+                 `dari payload kosong. Ini biasanya berarti klien belum selesai sinkronisasi — coba muat ulang halaman.`,
+        });
+      }
+    }
+
     // Strategi sederhana: kosongkan tabel, lalu insert ulang semua data.
     // Cocok untuk data berskala kecil (sekolah SD). Untuk data besar,
     // sebaiknya diganti dengan UPSERT per baris (ON CONFLICT DO UPDATE).

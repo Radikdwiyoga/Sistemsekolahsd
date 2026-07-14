@@ -6,7 +6,7 @@ import {
   CheckCircle, ShieldAlert, GraduationCap, Calendar, Clock, Save, X, Upload,
   DollarSign, Check
 } from 'lucide-react';
-import { LocalDB } from '../lib/db';
+import { LocalDB, resyncDatabase } from '../lib/db';
 import { User, Student, Teacher, SchoolClass, Announcement, Parent, Payment } from '../types/database';
 
 interface AdminDashboardProps {
@@ -235,7 +235,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
     showToast(`Status pembayaran berhasil diperbarui menjadi ${status.toUpperCase()}!`);
   };
 
-  const handleExecuteImport = () => {
+  const handleExecuteImport = async () => {
     if (importPreviewData.length === 0) return;
 
     let localUsers = [...LocalDB.getUsers()];
@@ -323,10 +323,10 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
       importedCount++;
     });
 
-    LocalDB.setUsers(localUsers);
-    LocalDB.setStudents(localStudents);
-    LocalDB.setParents(localParents);
-    LocalDB.setPayments(localPayments);
+    await LocalDB.setUsers(localUsers);
+    await LocalDB.setParents(localParents);
+    await LocalDB.setStudents(localStudents);
+    await LocalDB.setPayments(localPayments);
 
     refreshData();
     setIsImportModalOpen(false);
@@ -496,7 +496,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (modalType === 'siswa') {
@@ -568,26 +568,37 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
           showToast('Data siswa berhasil diperbarui!');
         }
       } else {
-        // Create Mode
-        // 1. Create Parent First
+        // Create Mode — build everything client-side, then send it as ONE atomic request.
+        // (Previously this fired 4 separate save() calls; if a later one failed, earlier
+        // ones had already committed, leaving orphaned rows that blocked retries.)
+        if (LocalDB.getUsers().find(u => u.email === formEmail)) {
+          alert('Email siswa sudah terdaftar!');
+          return;
+        }
+        if (LocalDB.getUsers().find(u => u.email === formParentEmail)) {
+          alert('Email wali sudah terdaftar!');
+          return;
+        }
+
         const parentId = 'p-' + Math.random().toString(36).substr(2, 9);
         const parentUserId = 'u-' + Math.random().toString(36).substr(2, 9);
-        const newParentUser: User = {
+        const studentUserId = 'u-' + Math.random().toString(36).substr(2, 9);
+        const studentId = 's-' + Math.random().toString(36).substr(2, 9);
+        const now = new Date().toISOString();
+
+        const parentUser = {
           id: parentUserId,
           name: formParentFather || 'Orang Tua Siswa',
           email: formParentEmail || `${formNis}@wali.merdeka.id`,
           password: formParentPassword,
-          role: 'wali',
           phone: formPhone,
           avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
           is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: now,
+          updated_at: now
         };
-
-        const newParent: Parent = {
+        const parent = {
           id: parentId,
-          user_id: parentUserId,
           father_name: formParentFather,
           mother_name: formParentMother,
           father_job: formParentJob,
@@ -595,49 +606,55 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
           address: formAddress,
           phone: formPhone
         };
+        const studentUser = {
+          id: studentUserId,
+          name: formName,
+          email: formEmail,
+          password: formStudentPassword,
+          phone: formPhone,
+          avatar: formStudentAvatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${formName}`,
+          is_active: true,
+          created_at: now,
+          updated_at: now
+        };
+        const student = {
+          id: studentId,
+          nis: formNis,
+          nisn: formNisn,
+          class_id: formClassId,
+          gender: formGender,
+          birth_place: formBirthPlace,
+          birth_date: formBirthDate,
+          address: formAddress,
+          entry_year: 2026,
+          status: 'aktif'
+        };
+        const payment = {
+          id: 'pay-' + Math.random().toString(36).substr(2, 9),
+          month: 'Juli 2026',
+          amount: 250000,
+          status: 'belum_lunas'
+        };
 
-        // 2. Create Student with user
-        const { user: newStudentUser, student: newStudent } = LocalDB.getUsers().find(u => u.email === formEmail) 
-          ? { user: null, student: null } 
-          : LocalDB.addStudentWithUser(
-              {
-                name: formName,
-                email: formEmail,
-                password: formStudentPassword,
-                role: 'siswa',
-                phone: formPhone,
-                avatar: formStudentAvatar || `https://api.dicebear.com/7.x/adventurer/svg?seed=${formName}`,
-                is_active: true
-              },
-              {
-                nis: formNis,
-                nisn: formNisn,
-                class_id: formClassId,
-                gender: formGender,
-                birth_place: formBirthPlace,
-                birth_date: formBirthDate,
-                address: formAddress,
-                parent_id: parentId,
-                entry_year: 2026,
-                status: 'aktif'
-              }
-            );
-
-        if (!newStudent) {
-          alert('Email siswa sudah terdaftar!');
+        try {
+          const response = await fetch('/api/students/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ studentUser, student, parentUser, parent, payment })
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            alert(`Gagal menyimpan data siswa: ${result.error || response.statusText}`);
+            return;
+          }
+          await resyncDatabase();
+          refreshData();
+          showToast('Data siswa & Orang tua beserta user login berhasil ditambahkan!');
+        } catch (err: any) {
+          alert(`Gagal menyimpan data siswa: ${err.message || err}`);
           return;
         }
-
-        // Save Parent data
-        const currentParents = LocalDB.getParents();
-        currentParents.push(newParent);
-        LocalDB.setParents(currentParents);
-
-        const currentUsers = LocalDB.getUsers();
-        currentUsers.push(newParentUser);
-        LocalDB.setUsers(currentUsers);
-
-        showToast('Data siswa & Orang tua beserta user login berhasil ditambahkan!');
       }
     } else if (modalType === 'guru') {
       if (editingId) {
@@ -663,7 +680,7 @@ export default function AdminDashboard({ currentUser, onLogout }: AdminDashboard
           showToast('Data guru berhasil diperbarui!');
         }
       } else {
-        const { teacher } = LocalDB.addTeacherWithUser(
+        const { teacher } = await LocalDB.addTeacherWithUser(
           {
             name: formName,
             email: formEmail,

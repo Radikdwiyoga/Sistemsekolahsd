@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import pkg from 'pg';
 import { createServer as createViteServer } from 'vite';
-import { loginHandler, logoutHandler, meHandler } from './src/server/auth/index.js';
+import { loginHandler, logoutHandler, meHandler, getRequestUser } from './src/server/auth/index.js';
 
 // Disable TLS verification to handle Aiven PostgreSQL self-signed certificates
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -27,6 +27,70 @@ app.use(express.json({ limit: '50mb' })); // support large payloads for Base64 p
 app.post('/api/auth/login', loginHandler);
 app.post('/api/auth/logout', logoutHandler);
 app.get('/api/auth/me', meHandler);
+
+// Creates a student, its login user, its parent, the parent's login user, and a default
+// payment row — all in ONE transaction (mirrors api/students/create.ts for local dev).
+app.post('/api/students/create', async (req: any, res: any) => {
+  const requester = await getRequestUser(req);
+  if (!requester || requester.role !== 'admin') {
+    return res.status(401).json({ error: 'Harus login sebagai admin untuk menambah siswa.' });
+  }
+
+  const { studentUser, student, parentUser, parent, payment } = req.body || {};
+  if (!studentUser || !student || !parentUser || !parent) {
+    return res.status(400).json({ error: 'Data tidak lengkap.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    await client.query(
+      `INSERT INTO users (id, name, email, password, role, phone, avatar, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, 'wali', $5, $6, $7, $8, $9)`,
+      [parentUser.id, parentUser.name, parentUser.email, parentUser.password, parentUser.phone,
+       parentUser.avatar, parentUser.is_active, parentUser.created_at, parentUser.updated_at]
+    );
+
+    await client.query(
+      `INSERT INTO parents (id, user_id, father_name, mother_name, father_job, mother_job, address, phone)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [parent.id, parentUser.id, parent.father_name, parent.mother_name, parent.father_job,
+       parent.mother_job, parent.address, parent.phone]
+    );
+
+    await client.query(
+      `INSERT INTO users (id, name, email, password, role, phone, avatar, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, 'siswa', $5, $6, $7, $8, $9)`,
+      [studentUser.id, studentUser.name, studentUser.email, studentUser.password, studentUser.phone,
+       studentUser.avatar, studentUser.is_active, studentUser.created_at, studentUser.updated_at]
+    );
+
+    await client.query(
+      `INSERT INTO students (id, user_id, nis, nisn, class_id, gender, birth_place, birth_date, address, parent_id, entry_year, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+      [student.id, studentUser.id, student.nis, student.nisn, student.class_id, student.gender,
+       student.birth_place, student.birth_date, student.address, parent.id, student.entry_year, student.status]
+    );
+
+    if (payment) {
+      await client.query(
+        `INSERT INTO payments (id, student_id, month, amount, status)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [payment.id, student.id, payment.month, payment.amount, payment.status]
+      );
+    }
+
+    await client.query('COMMIT');
+    return res.status(200).json({ success: true, studentId: student.id, parentId: parent.id });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('❌ Gagal membuat siswa (transaksi dibatalkan penuh):', error);
+    return res.status(400).json({ error: error.message || 'Gagal menyimpan data siswa.' });
+  } finally {
+    client.release();
+  }
+});
 
 // API 1: Sync cache on load
 app.get('/api/db/sync', async (req, res) => {
@@ -100,6 +164,21 @@ app.post('/api/db/update', async (req: any, res: any) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // Safety net: refuse to wipe a table that currently has rows via an empty payload —
+    // an empty array here is far more likely a client that hasn't finished syncing yet
+    // than an intentional "delete everything".
+    if (data.length === 0) {
+      const existing = await client.query(`SELECT COUNT(*) FROM ${dbTable}`);
+      const existingCount = Number(existing.rows[0].count);
+      if (existingCount > 0) {
+        await client.query('ROLLBACK');
+        client.release();
+        return res.status(409).json({
+          error: `Ditolak: percobaan mengosongkan tabel "${dbTable}" yang saat ini berisi ${existingCount} baris, dari payload kosong.`,
+        });
+      }
+    }
 
     // 1. Process Insert & Updates (Upsert)
     for (const row of data) {

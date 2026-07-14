@@ -435,6 +435,11 @@ const initialPayments: Payment[] = [
 // Memory Cache for Client-Side Dual Mode (Local / Real-API Proxy)
 const cache: Record<string, any> = {};
 
+// Becomes true only after a *successful* /api/db/sync — writes are blocked before this,
+// otherwise a save() firing before sync finishes would push stale hardcoded seed data
+// (initialStudents, initialParents, etc.) and overwrite real rows in the database.
+let syncCompleted = false;
+
 // Helper to check if real database API should be used
 const shouldUseAPI = (): boolean => {
   return (import.meta as any).env?.VITE_USE_API === 'true' || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production');
@@ -456,6 +461,7 @@ export const initializeDatabase = async (): Promise<void> => {
         Object.keys(payload).forEach(key => {
           cache[key] = payload[key];
         });
+        syncCompleted = true;
         console.log('✅ SD Merdeka: Cache synchronized successfully!');
       } else {
         console.warn('⚠️ SD Merdeka API sync failed. Falling back to local storage.');
@@ -466,6 +472,27 @@ export const initializeDatabase = async (): Promise<void> => {
   })();
 
   return initializedPromise;
+};
+
+/**
+ * Force a fresh pull from the database, bypassing the "already initialized" guard above.
+ * Needed after endpoints that write directly (like /api/students/create) instead of going
+ * through LocalDB.setX(), since those don't update the in-memory cache themselves.
+ */
+export const resyncDatabase = async (): Promise<void> => {
+  if (!shouldUseAPI()) return;
+  try {
+    const response = await fetch('/api/db/sync');
+    if (response.ok) {
+      const payload = await response.json();
+      Object.keys(payload).forEach(key => {
+        cache[key] = payload[key];
+      });
+      syncCompleted = true;
+    }
+  } catch (e) {
+    console.error('❌ SD Merdeka resync error:', e);
+  }
 };
 
 // Automatically initiate sync in production / API mode
@@ -491,20 +518,43 @@ export class LocalDB {
     return JSON.parse(data);
   }
 
-  private static save<T>(key: string, data: T[]): void {
+  // Returns a Promise so callers with FK-dependent writes (e.g. user -> student -> payment)
+  // can `await` each save in order instead of firing all requests concurrently, which was
+  // causing foreign key violations when a dependent row's request reached the database
+  // before the row it depends on had committed.
+  private static async save<T>(key: string, data: T[]): Promise<void> {
     if (shouldUseAPI()) {
-      cache[key] = data;
-      // Asynchronously send update to database endpoint
-      fetch('/api/db/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ table: key, data })
-      }).catch(err => console.error('Error updating production database table:', key, err));
+      if (!syncCompleted) {
+        const message = `Menolak menyimpan ke "${key}" — sinkronisasi awal dengan database belum selesai. Coba lagi dalam beberapa detik setelah halaman selesai dimuat.`;
+        console.error(`🚫 SD Merdeka: ${message}`);
+        throw new Error(message);
+      }
+
+      const previous = cache[key];
+      cache[key] = data; // optimistic update so the UI feels responsive
+      try {
+        const res = await fetch('/api/db/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table: key, data })
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.details || body.error || res.statusText);
+        }
+      } catch (err) {
+        cache[key] = previous; // roll back — a failed save must not leave bad data sitting in
+                                // memory, or every later attempt in this tab keeps resending it
+        const message = `Gagal menyimpan ke "${key}": ${err instanceof Error ? err.message : err}`;
+        console.error(message);
+        throw new Error(message);
+      }
       return;
     }
 
     localStorage.setItem(key, JSON.stringify(data));
   }
+
 
   // Getters
   static getUsers(): User[] { return this.load(KEYS.USERS, initialUsers); }
@@ -524,24 +574,26 @@ export class LocalDB {
   static getSubmissions(): Submission[] { return this.load(KEYS.SUBMISSIONS, []); }
 
   // Setters/CRUD Operations
-  static setUsers(data: User[]) { this.save(KEYS.USERS, data); }
-  static setStudents(data: Student[]) { this.save(KEYS.STUDENTS, data); }
-  static setParents(data: Parent[]) { this.save(KEYS.PARENTS, data); }
-  static setTeachers(data: Teacher[]) { this.save(KEYS.TEACHERS, data); }
-  static setClasses(data: SchoolClass[]) { this.save(KEYS.CLASSES, data); }
-  static setAcademicYears(data: AcademicYear[]) { this.save(KEYS.ACADEMIC_YEARS, data); }
-  static setSubjects(data: Subject[]) { this.save(KEYS.SUBJECTS, data); }
-  static setSchedules(data: Schedule[]) { this.save(KEYS.SCHEDULES, data); }
-  static setGrades(data: Grade[]) { this.save(KEYS.GRADES, data); }
-  static setAttendances(data: Attendance[]) { this.save(KEYS.ATTENDANCES, data); }
-  static setAssignments(data: Assignment[]) { this.save(KEYS.ASSIGNMENTS, data); }
-  static setAnnouncements(data: Announcement[]) { this.save(KEYS.ANNOUNCEMENTS, data); }
-  static setGallery(data: Gallery[]) { this.save(KEYS.GALLERY, data); }
-  static setPayments(data: Payment[]) { this.save(KEYS.PAYMENTS, data); }
-  static setSubmissions(data: Submission[]) { this.save(KEYS.SUBMISSIONS, data); }
+  static setUsers(data: User[]) { return this.save(KEYS.USERS, data); }
+  static setStudents(data: Student[]) { return this.save(KEYS.STUDENTS, data); }
+  static setParents(data: Parent[]) { return this.save(KEYS.PARENTS, data); }
+  static setTeachers(data: Teacher[]) { return this.save(KEYS.TEACHERS, data); }
+  static setClasses(data: SchoolClass[]) { return this.save(KEYS.CLASSES, data); }
+  static setAcademicYears(data: AcademicYear[]) { return this.save(KEYS.ACADEMIC_YEARS, data); }
+  static setSubjects(data: Subject[]) { return this.save(KEYS.SUBJECTS, data); }
+  static setSchedules(data: Schedule[]) { return this.save(KEYS.SCHEDULES, data); }
+  static setGrades(data: Grade[]) { return this.save(KEYS.GRADES, data); }
+  static setAttendances(data: Attendance[]) { return this.save(KEYS.ATTENDANCES, data); }
+  static setAssignments(data: Assignment[]) { return this.save(KEYS.ASSIGNMENTS, data); }
+  static setAnnouncements(data: Announcement[]) { return this.save(KEYS.ANNOUNCEMENTS, data); }
+  static setGallery(data: Gallery[]) { return this.save(KEYS.GALLERY, data); }
+  static setPayments(data: Payment[]) { return this.save(KEYS.PAYMENTS, data); }
+  static setSubmissions(data: Submission[]) { return this.save(KEYS.SUBMISSIONS, data); }
 
   // Specific Entity Helpers
-  static addStudentWithUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>, student: Omit<Student, 'id' | 'user_id'>, parentName?: string) {
+  // NOTE: `student.parent_id` must already reference a parent row that has been saved
+  // (awaited) BEFORE calling this — this function does not create the parent.
+  static async addStudentWithUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>, student: Omit<Student, 'id' | 'user_id'>, parentName?: string) {
     const userId = 'u-' + Math.random().toString(36).substr(2, 9);
     const studentId = 's-' + Math.random().toString(36).substr(2, 9);
     
@@ -560,13 +612,15 @@ export class LocalDB {
       user_id: userId,
     };
 
+    // Each step below MUST be awaited before the next — the following table has a foreign
+    // key pointing at this one, so inserting out of order (or concurrently) fails.
     const users = this.getUsers();
     users.push(newUser);
-    this.setUsers(users);
+    await this.setUsers(users);
 
     const students = this.getStudents();
     students.push(newStudent);
-    this.setStudents(students);
+    await this.setStudents(students);
 
     // Create default payment
     const payments = this.getPayments();
@@ -577,12 +631,12 @@ export class LocalDB {
       amount: 250000,
       status: 'belum_lunas'
     });
-    this.setPayments(payments);
+    await this.setPayments(payments);
 
     return { user: newUser, student: newStudent };
   }
 
-  static addTeacherWithUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>, teacher: Omit<Teacher, 'id' | 'user_id'>) {
+  static async addTeacherWithUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>, teacher: Omit<Teacher, 'id' | 'user_id'>) {
     const userId = 'u-' + Math.random().toString(36).substr(2, 9);
     const teacherId = 't-' + Math.random().toString(36).substr(2, 9);
 
@@ -603,11 +657,11 @@ export class LocalDB {
 
     const users = this.getUsers();
     users.push(newUser);
-    this.setUsers(users);
+    await this.setUsers(users);
 
     const teachers = this.getTeachers();
     teachers.push(newTeacher);
-    this.setTeachers(teachers);
+    await this.setTeachers(teachers);
 
     return { user: newUser, teacher: newTeacher };
   }
